@@ -31,7 +31,7 @@ logger = logging.getLogger('fairseq_cli.preprocess')
 
 def main(args):
     utils.import_user_module(args)
-
+    
     os.makedirs(args.destdir, exist_ok=True)
 
     logger.addHandler(logging.FileHandler(
@@ -66,13 +66,17 @@ def main(args):
             padding_factor=args.padding_factor,
         )
 
+    #### 定义了一些位置 ####
+    
     target = not args.only_source
 
     if not args.srcdict and os.path.exists(dict_path(args.source_lang)):
         raise FileExistsError(dict_path(args.source_lang))
     if target and not args.tgtdict and os.path.exists(dict_path(args.target_lang)):
         raise FileExistsError(dict_path(args.target_lang))
-
+    
+    #### 是否target和source共用一个vocab ####
+    
     if args.joined_dictionary:
         assert not args.srcdict or not args.tgtdict, \
             "cannot use both --srcdict and --tgtdict with --joined-dictionary"
@@ -106,7 +110,9 @@ def main(args):
     src_dict.save(dict_path(args.source_lang))
     if target and tgt_dict is not None:
         tgt_dict.save(dict_path(args.target_lang))
-
+    
+    #### 二进制存下来 ####
+    
     def make_binary_dataset(vocab, input_prefix, output_prefix, lang, num_workers):
         logger.info("[{}] Dictionary: {} types".format(lang, len(vocab)))
         n_seq_tok = [0, 0]
@@ -353,6 +359,7 @@ def dataset_dest_file(args, output_prefix, lang, extension):
 def get_offsets(input_file, num_workers):
     return Binarizer.find_offsets(input_file, num_workers)
 
+#### command line inference ####
 
 def cli_main():
     parser = options.get_preprocessing_parser()
